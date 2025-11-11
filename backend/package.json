@@ -13,7 +13,12 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix"
   },
-  "keywords": ["ai", "analytics", "content", "scraping"],
+  "keywords": [
+    "ai",
+    "analytics",
+    "content",
+    "scraping"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -21,15 +26,18 @@
     "@fastify/jwt": "^7.2.4",
     "@fastify/rate-limit": "^8.0.3",
     "@google/generative-ai": "^0.24.1",
+    "@types/ioredis": "^4.28.10",
     "axios": "^1.6.2",
     "bull": "^4.12.2",
     "cheerio": "^1.0.0-rc.12",
     "dotenv": "^16.3.1",
     "fastify": "^4.24.3",
+    "ioredis": "^5.8.2",
     "mongoose": "^8.0.3",
     "puppeteer": "^21.6.1",
     "redis": "^4.6.11",
     "reflect-metadata": "^0.2.1",
+    "tsyringe": "^4.10.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
