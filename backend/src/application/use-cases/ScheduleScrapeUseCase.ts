@@ -73,7 +73,7 @@ export class ScheduleScrapeUseCase {
             return {
                 jobId,
                 scheduled: true,
-                nextRun: job.nextInvocation().toDate(),
+                nextRun: job.nextInvocation() as Date,
             };
         } else {
             throw new Error('Failed to schedule job - invalid cron expression');
@@ -103,8 +103,8 @@ export class ScheduleScrapeUseCase {
             jobId,
             cronExpression: (job as any).cronExpression || 'unknown', // node-schedule doesn't expose cron expression directly
             scrapeType: jobId.includes('blog') ? 'blog' as const : 'content' as const,
-            nextRun: job.nextInvocation().toDate(),
-            running: job.running,
+            nextRun: job.nextInvocation() as Date,
+            running: (job as any).running || false,
         }));
 
         return { jobs };

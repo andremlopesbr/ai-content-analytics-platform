@@ -6,7 +6,7 @@ class DatabaseConnection {
   private isConnected: boolean = false;
   private connectionPromise: Promise<void> | null = null;
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): DatabaseConnection {
     if (!DatabaseConnection.instance) {
@@ -116,7 +116,7 @@ class DatabaseConnection {
         return false;
       }
 
-      await mongoose.connection.db.admin().ping();
+      await mongoose.connection.db!.admin().ping();
       return true;
     } catch (error) {
       console.error('❌ MongoDB ping failed:', error);

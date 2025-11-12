@@ -73,7 +73,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
       }
 
       // Get analyses by status with fallback for missing methods
-      let pendingAnalyses = [], processingAnalyses = [], completedAnalyses = [], failedAnalyses = [];
+      let pendingAnalyses: any[] = [], processingAnalyses: any[] = [], completedAnalyses: any[] = [], failedAnalyses: any[] = [];
       try {
         [pendingAnalyses, processingAnalyses, completedAnalyses, failedAnalyses] = await Promise.all([
           analysisRepository.findByStatus?.(AnalysisStatus.PENDING) || Promise.resolve([]),
@@ -87,7 +87,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
       }
 
       // Get reports by type with fallback
-      let contentSummaryReports = [], trendAnalysisReports = [], performanceReports = [], customReports = [];
+      let contentSummaryReports: any[] = [], trendAnalysisReports: any[] = [], performanceReports: any[] = [], customReports: any[] = [];
       try {
         [contentSummaryReports, trendAnalysisReports, performanceReports, customReports] = await Promise.all([
           reportRepository.findByType?.(ReportType.CONTENT_SUMMARY) || Promise.resolve([]),
