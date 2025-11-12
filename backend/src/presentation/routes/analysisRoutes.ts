@@ -1,7 +1,17 @@
+/**
+ * Analysis Routes
+ *
+ * Handles content analysis API endpoints using AI.
+ *
+ * Endpoints:
+ * - POST /api/analyze - Analyze content with AI
+ */
+
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { container } from 'tsyringe';
 import { AnalyzeContentUseCase } from '../../application/use-cases/AnalyzeContentUseCase';
 import { IAnalysisRepository } from '../../domain/repositories/IAnalysisRepository';
+import { AppError } from '../../shared/errors/AppError';
 
 interface AnalyzeContentBody {
   contentId: string;
@@ -49,6 +59,17 @@ export async function analysisRoutes(fastify: FastifyInstance) {
     try {
       const { contentId, analysisType, metadata } = request.body;
 
+      // Validate contentId format
+      if (!contentId || typeof contentId !== 'string' || contentId.length < 10) {
+        throw new AppError('Invalid content ID format', 400);
+      }
+
+      // Validate analysisType if provided
+      const validAnalysisTypes = ['sentiment', 'topics', 'keywords', 'summary', 'entities'];
+      if (analysisType && !validAnalysisTypes.includes(analysisType)) {
+        throw new AppError(`Invalid analysis type. Must be one of: ${validAnalysisTypes.join(', ')}`, 400);
+      }
+
       const result = await analyzeContentUseCase.execute({
         contentId,
         analysisType,
@@ -60,8 +81,10 @@ export async function analysisRoutes(fastify: FastifyInstance) {
         queued: result.queued,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to analyze content';
-      return reply.code(400).send({ error: message });
+      if (error instanceof AppError) {
+        throw error; // Let error handler manage it
+      }
+      throw new AppError('Failed to analyze content', 500);
     }
   });
 }

@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Instalar chromium para puppeteer
 RUN apk add --no-cache \
@@ -19,7 +19,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalar dependências
-RUN npm ci --only=production
+RUN npm ci --include=dev
 
 # Copiar código fonte
 COPY . .

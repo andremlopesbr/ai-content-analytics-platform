@@ -1,8 +1,20 @@
+/**
+ * Report Routes
+ *
+ * Handles report generation and retrieval API endpoints.
+ *
+ * Endpoints:
+ * - GET /api/reports - List reports with optional filters
+ * - POST /api/reports/generate - Generate new reports
+ */
+
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { container } from 'tsyringe';
 import { GenerateReportUseCase } from '../../application/use-cases/GenerateReportUseCase';
+import { ExportReportPdfUseCase } from '../../application/use-cases/ExportReportPdfUseCase';
 import { ReportType } from '../../domain/entities/Report';
 import { IReportRepository } from '../../domain/repositories/IReportRepository';
+import { AppError } from '../../shared/errors/AppError';
 
 interface GenerateReportBody {
   title: string;
@@ -26,6 +38,7 @@ interface GetReportsQuery {
 
 export async function reportRoutes(fastify: FastifyInstance) {
   const generateReportUseCase = container.resolve(GenerateReportUseCase);
+  const exportReportPdfUseCase = container.resolve(ExportReportPdfUseCase);
 
   fastify.get('/api/reports', {
     schema: {
@@ -68,6 +81,20 @@ export async function reportRoutes(fastify: FastifyInstance) {
   }, async (request: FastifyRequest<{ Querystring: GetReportsQuery }>, reply: FastifyReply) => {
     try {
       const { type, generatedBy, limit = 10, offset = 0 } = request.query;
+
+      // Validate report type if provided
+      if (type && !Object.values(ReportType).includes(type)) {
+        throw new AppError(`Invalid report type. Must be one of: ${Object.values(ReportType).join(', ')}`, 400);
+      }
+
+      // Validate pagination parameters
+      if (limit < 1 || limit > 100) {
+        throw new AppError('Limit must be between 1 and 100', 400);
+      }
+      if (offset < 0) {
+        throw new AppError('Offset must be non-negative', 400);
+      }
+
       const reportRepository = container.resolve<IReportRepository>('IReportRepository');
 
       const filter = {
@@ -85,7 +112,10 @@ export async function reportRoutes(fastify: FastifyInstance) {
         total,
       });
     } catch (error) {
-      return reply.code(500).send({ error: 'Failed to fetch reports' });
+      if (error instanceof AppError) {
+        throw error; // Let error handler manage it
+      }
+      throw new AppError('Failed to fetch reports', 500);
     }
   });
 
@@ -143,8 +173,36 @@ export async function reportRoutes(fastify: FastifyInstance) {
     try {
       const { title, type, contentIds, analysisIds, filters, generatedBy } = request.body;
 
+      // Validate required fields
+      if (!title || title.trim().length === 0) {
+        throw new AppError('Title is required and cannot be empty', 400);
+      }
+
+      // Validate report type
+      if (!Object.values(ReportType).includes(type)) {
+        throw new AppError(`Invalid report type. Must be one of: ${Object.values(ReportType).join(', ')}`, 400);
+      }
+
+      // Validate contentIds if provided
+      if (contentIds && (!Array.isArray(contentIds) || contentIds.some(id => typeof id !== 'string' || id.length < 10))) {
+        throw new AppError('Content IDs must be valid non-empty strings', 400);
+      }
+
+      // Validate analysisIds if provided
+      if (analysisIds && (!Array.isArray(analysisIds) || analysisIds.some(id => typeof id !== 'string' || id.length < 10))) {
+        throw new AppError('Analysis IDs must be valid non-empty strings', 400);
+      }
+
+      // Validate date range if provided
+      if (filters?.dateRange) {
+        const { from, to } = filters.dateRange;
+        if (from && to && new Date(from) >= new Date(to)) {
+          throw new AppError('Date range "from" must be before "to"', 400);
+        }
+      }
+
       const result = await generateReportUseCase.execute({
-        title,
+        title: title.trim(),
         type,
         contentIds,
         analysisIds,
@@ -163,8 +221,49 @@ export async function reportRoutes(fastify: FastifyInstance) {
         report: result.report.toJSON(),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to generate report';
-      return reply.code(400).send({ error: message });
+      if (error instanceof AppError) {
+        throw error; // Let error handler manage it
+      }
+      throw new AppError('Failed to generate report', 500);
     }
   });
+
+ fastify.get('/api/reports/:id/export/pdf', {
+   schema: {
+     params: {
+       type: 'object',
+       required: ['id'],
+       properties: {
+         id: { type: 'string' },
+       },
+     },
+     response: {
+       200: {
+         type: 'string',
+         format: 'binary',
+       },
+     },
+   },
+ }, async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+   try {
+     const { id } = request.params;
+
+     // Validate report ID
+     if (!id || id.length < 10) {
+       throw new AppError('Invalid report ID', 400);
+     }
+
+     const result = await exportReportPdfUseCase.execute({ reportId: id });
+
+     return reply
+       .header('Content-Type', 'application/pdf')
+       .header('Content-Disposition', `attachment; filename="${result.filename}"`)
+       .send(result.pdfBuffer);
+   } catch (error) {
+     if (error instanceof AppError) {
+       throw error; // Let error handler manage it
+     }
+     throw new AppError('Failed to export report to PDF', 500);
+   }
+ });
 }

@@ -1,9 +1,19 @@
+/**
+ * Statistics Routes
+ *
+ * Handles statistics and analytics API endpoints.
+ *
+ * Endpoints:
+ * - GET /api/stats - Get platform statistics
+ */
+
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { container } from 'tsyringe';
 import { IContentRepository } from '../../domain/repositories/IContentRepository';
 import { IAnalysisRepository } from '../../domain/repositories/IAnalysisRepository';
 import { IReportRepository } from '../../domain/repositories/IReportRepository';
 import { AnalysisStatus, ReportType } from '../../domain/entities';
+import { AppError } from '../../shared/errors/AppError';
 
 export async function statsRoutes(fastify: FastifyInstance) {
   fastify.get('/api/stats', {
@@ -50,38 +60,62 @@ export async function statsRoutes(fastify: FastifyInstance) {
       const analysisRepository = container.resolve<IAnalysisRepository>('IAnalysisRepository');
       const reportRepository = container.resolve<IReportRepository>('IReportRepository');
 
-      // Get basic counts
-      const [totalContents, totalAnalyses, totalReports] = await Promise.all([
-        contentRepository.count(),
-        analysisRepository.count(),
-        reportRepository.count(),
-      ]);
+      // Get basic counts with error handling
+      let totalContents: number, totalAnalyses: number, totalReports: number;
+      try {
+        [totalContents, totalAnalyses, totalReports] = await Promise.all([
+          contentRepository.count(),
+          analysisRepository.count(),
+          reportRepository.count(),
+        ]);
+      } catch (dbError) {
+        throw new AppError('Database connection error', 503);
+      }
 
-      // Get analyses by status
-      const [pendingAnalyses, processingAnalyses, completedAnalyses, failedAnalyses] = await Promise.all([
-        analysisRepository.findByStatus(AnalysisStatus.PENDING),
-        analysisRepository.findByStatus(AnalysisStatus.PROCESSING),
-        analysisRepository.findByStatus(AnalysisStatus.COMPLETED),
-        analysisRepository.findByStatus(AnalysisStatus.FAILED),
-      ]);
+      // Get analyses by status with fallback for missing methods
+      let pendingAnalyses = [], processingAnalyses = [], completedAnalyses = [], failedAnalyses = [];
+      try {
+        [pendingAnalyses, processingAnalyses, completedAnalyses, failedAnalyses] = await Promise.all([
+          analysisRepository.findByStatus?.(AnalysisStatus.PENDING) || Promise.resolve([]),
+          analysisRepository.findByStatus?.(AnalysisStatus.PROCESSING) || Promise.resolve([]),
+          analysisRepository.findByStatus?.(AnalysisStatus.COMPLETED) || Promise.resolve([]),
+          analysisRepository.findByStatus?.(AnalysisStatus.FAILED) || Promise.resolve([]),
+        ]);
+      } catch (analysisError) {
+        // Log warning but don't fail the entire request
+        console.warn('Could not fetch analysis status counts:', analysisError);
+      }
 
-      // Get reports by type
-      const [contentSummaryReports, trendAnalysisReports, performanceReports, customReports] = await Promise.all([
-        reportRepository.findByType(ReportType.CONTENT_SUMMARY),
-        reportRepository.findByType(ReportType.TREND_ANALYSIS),
-        reportRepository.findByType(ReportType.PERFORMANCE_METRICS),
-        reportRepository.findByType(ReportType.CUSTOM),
-      ]);
+      // Get reports by type with fallback
+      let contentSummaryReports = [], trendAnalysisReports = [], performanceReports = [], customReports = [];
+      try {
+        [contentSummaryReports, trendAnalysisReports, performanceReports, customReports] = await Promise.all([
+          reportRepository.findByType?.(ReportType.CONTENT_SUMMARY) || Promise.resolve([]),
+          reportRepository.findByType?.(ReportType.TREND_ANALYSIS) || Promise.resolve([]),
+          reportRepository.findByType?.(ReportType.PERFORMANCE_METRICS) || Promise.resolve([]),
+          reportRepository.findByType?.(ReportType.CUSTOM) || Promise.resolve([]),
+        ]);
+      } catch (reportError) {
+        // Log warning but don't fail the entire request
+        console.warn('Could not fetch report type counts:', reportError);
+      }
 
-      // Calculate contents with analyses
-      const allContents = await contentRepository.findMany();
-      const contentsWithAnalyses = new Set(
-        (await Promise.all(
-          allContents.map(c => analysisRepository.findByContentId(c.id))
-        ))
-        .flat()
-        .map(a => a.contentId)
-      );
+      // Calculate contents with analyses with error handling
+      let contentsWithAnalyses = new Set<string>();
+      try {
+        const allContents = await contentRepository.findMany();
+        if (allContents.length > 0) {
+          const analyses = await Promise.all(
+            allContents.map(c => analysisRepository.findByContentId?.(c.id) || Promise.resolve([]))
+          );
+          contentsWithAnalyses = new Set(
+            analyses.flat().map(a => a?.contentId).filter(Boolean)
+          );
+        }
+      } catch (calcError) {
+        // Log warning but continue with empty set
+        console.warn('Could not calculate analyzed contents:', calcError);
+      }
 
       return reply.send({
         totalContents,
@@ -89,23 +123,26 @@ export async function statsRoutes(fastify: FastifyInstance) {
         totalReports,
         contentsByStatus: {
           analyzed: contentsWithAnalyses.size,
-          pending: totalContents - contentsWithAnalyses.size,
+          pending: Math.max(0, totalContents - contentsWithAnalyses.size),
         },
         analysesByStatus: {
-          pending: pendingAnalyses.length,
-          processing: processingAnalyses.length,
-          completed: completedAnalyses.length,
-          failed: failedAnalyses.length,
+          pending: Array.isArray(pendingAnalyses) ? pendingAnalyses.length : 0,
+          processing: Array.isArray(processingAnalyses) ? processingAnalyses.length : 0,
+          completed: Array.isArray(completedAnalyses) ? completedAnalyses.length : 0,
+          failed: Array.isArray(failedAnalyses) ? failedAnalyses.length : 0,
         },
         reportsByType: {
-          content_summary: contentSummaryReports.length,
-          trend_analysis: trendAnalysisReports.length,
-          performance_metrics: performanceReports.length,
-          custom: customReports.length,
+          content_summary: Array.isArray(contentSummaryReports) ? contentSummaryReports.length : 0,
+          trend_analysis: Array.isArray(trendAnalysisReports) ? trendAnalysisReports.length : 0,
+          performance_metrics: Array.isArray(performanceReports) ? performanceReports.length : 0,
+          custom: Array.isArray(customReports) ? customReports.length : 0,
         },
       });
     } catch (error) {
-      return reply.code(500).send({ error: 'Failed to fetch statistics' });
+      if (error instanceof AppError) {
+        throw error; // Let error handler manage it
+      }
+      throw new AppError('Failed to fetch statistics', 500);
     }
   });
 }

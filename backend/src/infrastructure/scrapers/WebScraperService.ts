@@ -4,6 +4,8 @@ import * as cheerio from 'cheerio';
 import { IScraperService, ScrapedData, ScrapingOptions } from '../../domain/repositories/IScraperService';
 import { AppError } from '../../shared/errors/AppError';
 
+type CheerioAPI = ReturnType<typeof cheerio.load>;
+
 @injectable()
 export class WebScraperService implements IScraperService {
   private browser: Browser | null = null;
@@ -69,7 +71,7 @@ export class WebScraperService implements IScraperService {
     return html;
   }
 
-  private extractText($: cheerio.Root): string {
+  private extractText($: CheerioAPI): string {
     // Remove unwanted elements
     $('script, style, nav, header, footer, aside, .ad, .advertisement, .sidebar').remove();
 
@@ -101,7 +103,7 @@ export class WebScraperService implements IScraperService {
       .trim();
   }
 
-  private extractTitle($: cheerio.Root): string {
+  private extractTitle($: ReturnType<typeof cheerio.load>): string {
     const titleSelectors = [
       'title',
       'h1',
@@ -122,7 +124,7 @@ export class WebScraperService implements IScraperService {
     return 'Untitled';
   }
 
-  private extractMetadata($: cheerio.Root): Record<string, any> {
+  private extractMetadata($: ReturnType<typeof cheerio.load>): Record<string, any> {
     const metadata: Record<string, any> = {
       scrapedAt: new Date(),
       wordCount: 0,
@@ -163,7 +165,7 @@ export class WebScraperService implements IScraperService {
     return metadata;
   }
 
-  private extractLinks($: cheerio.Root, baseUrl: string): string[] {
+  private extractLinks($: ReturnType<typeof cheerio.load>, baseUrl: string): string[] {
     const links: string[] = [];
     const seen = new Set<string>();
 
@@ -172,7 +174,7 @@ export class WebScraperService implements IScraperService {
       if (href) {
         try {
           const absoluteUrl = new URL(href, baseUrl).toString();
-          if (!seen.has(absoluteUrl) && absoluteUrl.startsWith('http')) {
+          if (!seen.has(absoluteUrl) && absoluteUrl.startsWith('http') && !absoluteUrl.includes('#')) {
             links.push(absoluteUrl);
             seen.add(absoluteUrl);
           }
@@ -185,7 +187,7 @@ export class WebScraperService implements IScraperService {
     return links.slice(0, 50); // Limit to 50 links
   }
 
-  private extractAuthor($: cheerio.Root): string | undefined {
+  private extractAuthor($: ReturnType<typeof cheerio.load>): string | undefined {
     const authorSelectors = [
       '[rel="author"]',
       '.author',
@@ -207,7 +209,7 @@ export class WebScraperService implements IScraperService {
     return undefined;
   }
 
-  private extractPublishedDate($: cheerio.Root): Date | undefined {
+  private extractPublishedDate($: ReturnType<typeof cheerio.load>): Date | undefined {
     const dateSelectors = [
       '[property="article:published_time"]',
       '[property="og:published_time"]',
@@ -236,7 +238,7 @@ export class WebScraperService implements IScraperService {
     return undefined;
   }
 
-  private extractTags($: cheerio.Root): string[] {
+  private extractTags($: ReturnType<typeof cheerio.load>): string[] {
     const tags: string[] = [];
 
     // Common tag selectors

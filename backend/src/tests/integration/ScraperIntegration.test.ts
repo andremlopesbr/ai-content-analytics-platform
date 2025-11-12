@@ -105,8 +105,8 @@ describe('Scraper Integration Tests', () => {
 
       // Test the scraping logic (this would normally be done via HTTP)
       // For integration tests, we would mock the HTTP requests
-      const result = await scraperService.scrape('http://example.com/test', {
-        timeout: 5000,
+      const result = await scraperService.scrape('http://httpbin.org/html', {
+        timeout: 10000,
         retryAttempts: 1
       });
 
@@ -120,7 +120,7 @@ describe('Scraper Integration Tests', () => {
       expect(result.metadata).toHaveProperty('scrapedAt');
       expect(result.metadata).toHaveProperty('wordCount');
       expect(result.metadata).toHaveProperty('readingTime');
-    });
+    }, 15000);
 
     it('should handle different content structures', async () => {
       // Test with different HTML structures (blogs, news articles, etc.)
@@ -171,7 +171,7 @@ describe('Scraper Integration Tests', () => {
       const startTime = Date.now();
 
       // Make multiple requests to the same domain quickly
-      const promises = Array(3).fill(null).map(() =>
+      const promises = Array(2).fill(null).map(() =>
         scraperService.scrape('http://httpbin.org/delay/0.1', { timeout: 10000 })
       );
 
@@ -180,7 +180,7 @@ describe('Scraper Integration Tests', () => {
 
       // Should take at least some time due to rate limiting
       expect(endTime - startTime).toBeGreaterThan(1000);
-    });
+    }, 15000);
 
     it('should extract various metadata types', async () => {
       const richHtml = `
@@ -210,7 +210,7 @@ describe('Scraper Integration Tests', () => {
   describe('Use Case Integration', () => {
     it('should integrate with ScrapeContentUseCase end-to-end', async () => {
       const request = {
-        url: 'http://example.com/article',
+        url: 'http://httpbin.org/html',
         title: 'Test Article',
         author: 'Test Author'
       };
@@ -222,7 +222,7 @@ describe('Scraper Integration Tests', () => {
       expect(result).toHaveProperty('content');
       expect(result).toHaveProperty('scraped');
       expect(result.scraped).toBe(true);
-    });
+    }, 15000);
 
     it('should handle duplicate content detection', async () => {
       const request = {

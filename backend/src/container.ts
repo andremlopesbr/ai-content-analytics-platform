@@ -19,5 +19,14 @@ container.registerSingleton<IReportRepository>('IReportRepository', MongoReportR
 // Register services
 container.registerSingleton<IScraperService>('IScraperService', WebScraperService);
 
+// Register use cases
+import { ScrapeContentUseCase } from './application/use-cases/ScrapeContentUseCase';
+import { ScrapeBlogUseCase } from './application/use-cases/ScrapeBlogUseCase';
+import { ScheduleScrapeUseCase } from './application/use-cases/ScheduleScrapeUseCase';
+
+container.registerSingleton(ScrapeContentUseCase, ScrapeContentUseCase);
+container.registerSingleton(ScrapeBlogUseCase, ScrapeBlogUseCase);
+container.registerSingleton(ScheduleScrapeUseCase, ScheduleScrapeUseCase);
+
 // Use cases are registered with @injectable decorator
 // Routes and services will resolve dependencies automatically
