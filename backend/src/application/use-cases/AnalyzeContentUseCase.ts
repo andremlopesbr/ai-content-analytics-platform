@@ -2,6 +2,7 @@ import { injectable, inject } from 'tsyringe';
 import { Analysis, AnalysisStatus } from '../../domain/entities/Analysis';
 import { IAnalysisRepository } from '../../domain/repositories/IAnalysisRepository';
 import { IContentRepository } from '../../domain/repositories/IContentRepository';
+import { AppError } from '../../shared/errors/AppError';
 
 export interface AnalyzeContentRequest {
   contentId: string;
@@ -25,7 +26,7 @@ export class AnalyzeContentUseCase {
     // Check if content exists
     const content = await this.contentRepository.findById(request.contentId);
     if (!content) {
-      throw new Error(`Content with ID ${request.contentId} not found`);
+      throw new AppError(`Content with ID ${request.contentId} not found`, 404);
     }
 
     // Check if analysis already exists and is completed

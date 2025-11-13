@@ -13,6 +13,16 @@ import { AnalyzeContentUseCase } from '../../application/use-cases/AnalyzeConten
 import { IAnalysisRepository } from '../../domain/repositories/IAnalysisRepository';
 import { AppError } from '../../shared/errors/AppError';
 
+/**
+ * Analysis Routes
+ *
+ * Handles content analysis API endpoints using AI.
+ *
+ * Endpoints:
+ * - GET /api/analyses - List all analyses
+ * - POST /api/analyze - Analyze content with AI
+ */
+
 interface AnalyzeContentBody {
   contentId: string;
   analysisType?: string;
@@ -21,6 +31,41 @@ interface AnalyzeContentBody {
 
 export async function analysisRoutes(fastify: FastifyInstance) {
   const analyzeContentUseCase = container.resolve(AnalyzeContentUseCase);
+
+  fastify.get('/api/analyses', {
+    schema: {
+      response: {
+        200: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              contentId: { type: 'string' },
+              status: { type: 'string', enum: ['pending', 'processing', 'completed', 'failed'] },
+              results: { type: 'object' },
+              error: { type: 'string' },
+              metadata: { type: 'object' },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' },
+            },
+          },
+        },
+      },
+    },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const analysisRepository = container.resolve<IAnalysisRepository>('IAnalysisRepository');
+      const analyses = await analysisRepository.findMany();
+
+      return reply.send(analyses.map(analysis => analysis.toJSON()));
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error; // Let error handler manage it
+      }
+      throw new AppError('Failed to fetch analyses', 500);
+    }
+  });
 
   fastify.post('/api/analyze', {
     schema: {

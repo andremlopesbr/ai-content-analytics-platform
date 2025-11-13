@@ -302,6 +302,43 @@ export async function contentRoutes(fastify: FastifyInstance) {
     }
   });
 
+  fastify.get('/api/contents', {
+    schema: {
+      response: {
+        200: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              title: { type: 'string' },
+              content: { type: 'string' },
+              url: { type: 'string' },
+              author: { type: 'string' },
+              publishedAt: { type: 'string', format: 'date-time' },
+              tags: { type: 'array', items: { type: 'string' } },
+              metadata: { type: 'object' },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' },
+            },
+          },
+        },
+      },
+    },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const contentRepository = container.resolve<IContentRepository>('IContentRepository');
+      const contents = await contentRepository.findMany();
+
+      return reply.send(contents.map(content => content.toJSON()));
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error; // Let error handler manage it
+      }
+      throw new AppError('Failed to fetch contents', 500);
+    }
+  });
+
   fastify.get('/api/content/:id', {
     schema: {
       params: {

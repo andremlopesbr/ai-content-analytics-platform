@@ -41,12 +41,12 @@ export const fetchContents = async (): Promise<Content[]> => {
 };
 
 export const fetchContent = async (id: string): Promise<Content> => {
-    const response = await api.get(`/contents/${id}`);
+    const response = await api.get(`/content/${id}`);
     return response.data;
 };
 
 export const scrapeContent = async (url: string): Promise<Content> => {
-    const response = await api.post('/contents/scrape', { url });
+    const response = await api.post('/scrape', { url });
     return response.data;
 };
 
@@ -56,7 +56,7 @@ export const fetchAnalyses = async (): Promise<Analysis[]> => {
 };
 
 export const analyzeContent = async (contentId: string): Promise<Analysis> => {
-    const response = await api.post('/analyses', { contentId });
+    const response = await api.post('/analyze', { contentId });
     return response.data;
 };
 
@@ -66,7 +66,7 @@ export const fetchReports = async (): Promise<Report[]> => {
 };
 
 export const generateReport = async (data: { title: string }): Promise<Report> => {
-    const response = await api.post('/reports', data);
+    const response = await api.post('/reports/generate', data);
     return response.data;
 };
 

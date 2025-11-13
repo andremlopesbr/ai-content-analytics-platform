@@ -34,7 +34,7 @@ class ScraperLogger {
 const SCRAPING_EXAMPLES = [
   {
     name: 'BBC News Article',
-    url: 'https://www.bbc.com/news/world-europe-67379781',
+    url: 'https://www.bbc.com/news/world/latin_america',
     category: 'news',
     description: 'BBC News article about European affairs'
   },
@@ -46,7 +46,7 @@ const SCRAPING_EXAMPLES = [
   },
   {
     name: 'Example Blog Post',
-    url: 'https://example.com',
+    url: 'https://artedesignpa.com.br/blog/',
     category: 'demo',
     description: 'Simple example website for testing'
   }
