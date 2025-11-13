@@ -21,6 +21,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useContents, useAnalyses } from '../../application/hooks';
 import AnalysisControls from './AnalysisControls';
+import StatusIndicator from './StatusIndicators';
 
 const ContentList: React.FC = () => {
     const { data: contents, isLoading, error } = useContents();
@@ -50,7 +51,7 @@ const ContentList: React.FC = () => {
 
     const getAnalysisStatus = (contentId: string) => {
         const analysis = analyses?.find(a => a.contentId === contentId);
-        return analysis ? 'analyzed' : 'pending';
+        return analysis ? analysis.status : 'pending';
     };
 
     if (isLoading) {
@@ -100,8 +101,11 @@ const ContentList: React.FC = () => {
                     <TableHead>
                         <TableRow>
                             <TableCell>Título</TableCell>
+                            <TableCell>Autor</TableCell>
+                            <TableCell>Publicado</TableCell>
+                            <TableCell>Tags</TableCell>
                             <TableCell>Status</TableCell>
-                            <TableCell>Data</TableCell>
+                            <TableCell>Criado</TableCell>
                             <TableCell>Ações</TableCell>
                             <TableCell width="50px"></TableCell>
                         </TableRow>
@@ -111,16 +115,55 @@ const ContentList: React.FC = () => {
                             <React.Fragment key={content.id}>
                                 <TableRow>
                                     <TableCell>
-                                        <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
-                                            {content.title}
+                                        <Box>
+                                            <Typography variant="body2" noWrap sx={{ maxWidth: 250, fontWeight: 'bold' }}>
+                                                {content.title}
+                                            </Typography>
+                                            <Typography
+                                                variant="caption"
+                                                color="primary"
+                                                sx={{
+                                                    maxWidth: 250,
+                                                    cursor: 'pointer',
+                                                    textDecoration: 'underline',
+                                                    '&:hover': { color: 'primary.dark' }
+                                                }}
+                                                onClick={() => window.open(content.url, '_blank')}
+                                            >
+                                                {content.url}
+                                            </Typography>
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2">
+                                            {content.author || '-'}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
-                                        <Chip
-                                            label={getAnalysisStatus(content.id) === 'analyzed' ? 'Analisado' : 'Pendente'}
-                                            color={getAnalysisStatus(content.id) === 'analyzed' ? 'success' : 'default'}
-                                            size="small"
-                                        />
+                                        <Typography variant="body2">
+                                            {content.publishedAt ? new Date(content.publishedAt).toLocaleDateString('pt-BR') : '-'}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                            {(content.tags || []).slice(0, 3).map((tag, index) => (
+                                                <Chip
+                                                    key={index}
+                                                    label={tag}
+                                                    size="small"
+                                                    variant="outlined"
+                                                    sx={{ fontSize: '0.7rem', height: '20px' }}
+                                                />
+                                            ))}
+                                            {(content.tags || []).length > 3 && (
+                                                <Typography variant="caption" color="text.secondary">
+                                                    +{(content.tags || []).length - 3}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell>
+                                        <StatusIndicator status={getAnalysisStatus(content.id)} />
                                     </TableCell>
                                     <TableCell>
                                         <Typography variant="body2">
@@ -140,13 +183,10 @@ const ContentList: React.FC = () => {
                                     </TableCell>
                                 </TableRow>
                                 <TableRow>
-                                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
+                                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
                                         <Collapse in={expandedRows.has(content.id)} timeout="auto" unmountOnExit>
                                             <Box sx={{ margin: 1 }}>
                                                 <Typography variant="body2" gutterBottom>
-                                                    <strong>URL:</strong> {content.url}
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ mt: 1 }}>
                                                     <strong>Conteúdo:</strong>
                                                 </Typography>
                                                 <Typography
@@ -162,6 +202,28 @@ const ContentList: React.FC = () => {
                                                 >
                                                     {content.content}
                                                 </Typography>
+                                                {content.metadata && Object.keys(content.metadata).length > 0 && (
+                                                    <>
+                                                        <Typography variant="body2" sx={{ mt: 1 }}>
+                                                            <strong>Metadados:</strong>
+                                                        </Typography>
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
+                                                                mt: 0.5,
+                                                                maxHeight: 100,
+                                                                overflow: 'auto',
+                                                                backgroundColor: 'grey.100',
+                                                                p: 1,
+                                                                borderRadius: 1,
+                                                                fontFamily: 'monospace',
+                                                                fontSize: '0.8rem'
+                                                            }}
+                                                        >
+                                                            {JSON.stringify(content.metadata, null, 2)}
+                                                        </Typography>
+                                                    </>
+                                                )}
                                             </Box>
                                         </Collapse>
                                     </TableCell>

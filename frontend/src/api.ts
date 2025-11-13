@@ -15,23 +15,42 @@ export interface Content {
     url: string;
     title: string;
     content: string;
+    author?: string;
+    publishedAt?: string;
+    tags?: string[];
+    metadata?: Record<string, any>;
     createdAt: string;
+    updatedAt: string;
 }
 
 export interface Analysis {
     id: string;
     contentId: string;
-    sentiment: string;
-    keywords: string[];
-    summary: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    results?: {
+        sentiment?: string;
+        keywords?: string[];
+        summary?: string;
+        topics?: string[];
+        entities?: Array<{ name: string; type: string; }>;
+    };
+    error?: string;
+    metadata?: Record<string, any>;
     createdAt: string;
+    updatedAt: string;
 }
 
 export interface Report {
     id: string;
     title: string;
-    content: string;
-    generatedAt: string;
+    type: 'content_summary' | 'trend_analysis' | 'performance_metrics' | 'custom';
+    contentIds?: string[];
+    analysisIds?: string[];
+    data?: Record<string, any>;
+    metadata?: Record<string, any>;
+    generatedBy?: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 // Funções de API simplificadas

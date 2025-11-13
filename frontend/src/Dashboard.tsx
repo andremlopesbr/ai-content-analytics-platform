@@ -1,6 +1,7 @@
 import React from 'react';
 import { Grid, Typography, Box } from '@mui/material';
-import { useStats, useReports, useExportReportPdf } from './application/hooks';
+import { useStats, useReports } from './application/hooks';
+import { exportReportPdf } from './api';
 import {
   StatsCards,
   ChartsSection,
@@ -9,10 +10,25 @@ import {
   ContentList,
 } from './presentation/components';
 
+async function handleExportPdf(reportId: string) {
+  try {
+    const blob = await exportReportPdf(reportId);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `report-${reportId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error('Erro ao exportar relatório:', error);
+  }
+}
+
 function Dashboard() {
   const { data: stats, isLoading, error } = useStats();
   const { data: reports } = useReports();
-  const { exportPdf: handleExportPdf } = useExportReportPdf();
 
   if (isLoading) {
     return <Typography>Carregando...</Typography>;
