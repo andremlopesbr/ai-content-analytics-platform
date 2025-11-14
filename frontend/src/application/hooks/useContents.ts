@@ -2,10 +2,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchContents, fetchContent, scrapeContent, Content } from '../../api';
 
 // Hook para buscar todos os conteúdos
-export const useContents = () => {
-    return useQuery<Content[]>({
-        queryKey: ['contents'],
-        queryFn: fetchContents,
+export const useContents = (filters?: {
+    search?: string;
+    author?: string;
+    tags?: string[];
+    publishedAfter?: string;
+    publishedBefore?: string;
+    limit?: number;
+    offset?: number;
+}) => {
+    return useQuery({
+        queryKey: ['contents', filters],
+        queryFn: () => fetchContents(filters),
     });
 };
 

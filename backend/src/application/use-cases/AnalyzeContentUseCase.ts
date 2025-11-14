@@ -20,7 +20,7 @@ export class AnalyzeContentUseCase {
   constructor(
     @inject('IAnalysisRepository') private analysisRepository: IAnalysisRepository,
     @inject('IContentRepository') private contentRepository: IContentRepository,
-  ) {}
+  ) { }
 
   async execute(request: AnalyzeContentRequest): Promise<AnalyzeContentResponse> {
     // Check if content exists
@@ -62,14 +62,11 @@ export class AnalyzeContentUseCase {
   }
 
   private async queueAnalysis(analysisId: string): Promise<void> {
-    // Placeholder for queue implementation
-    // In a real implementation, this would add the analysis to a job queue
+    // Execute immediately for debugging purposes
     console.log(`Analysis ${analysisId} queued for processing`);
 
-    // Simulate background processing for prototype
-    setTimeout(async () => {
-      await this.performAnalysis(analysisId);
-    }, 1000);
+    // Execute analysis immediately
+    await this.performAnalysis(analysisId);
   }
 
   private async performAnalysis(analysisId: string): Promise<void> {

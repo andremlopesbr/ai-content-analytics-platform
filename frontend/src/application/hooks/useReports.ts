@@ -14,7 +14,7 @@ export const useReports = () => {
         ? query.data.map(report => ({
             id: report.id,
             title: report.title,
-            createdAt: report.generatedAt, // Mapeia generatedAt para createdAt
+            createdAt: report.createdAt, // Mapeia createdAt para createdAt
         }))
         : [];
 

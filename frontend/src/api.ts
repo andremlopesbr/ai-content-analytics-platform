@@ -1,4 +1,5 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
+import { toast } from 'react-toastify';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -8,6 +9,23 @@ export const api = axios.create({
         'Content-Type': 'application/json',
     },
 });
+
+// Interceptor para tratamento de erros centralizado
+api.interceptors.response.use(
+    (response) => response, // Sucesso: apenas repassa a resposta
+    (error: AxiosError) => {
+        // Lógica para lidar com erros de API
+        console.error('API Error:', error.response?.data || error.message);
+
+        // Exemplo de notificação para o usuário
+        const errorMessage = (error.response?.data as { message?: string })?.message || 'Ocorreu um erro inesperado. Tente novamente mais tarde.';
+        toast.error(errorMessage);
+
+        // Rejeita a promessa para que o erro possa ser tratado no local da chamada, se necessário
+        return Promise.reject(error);
+    }
+);
+
 
 // Tipos comuns
 export interface Content {
@@ -54,13 +72,22 @@ export interface Report {
 }
 
 // Funções de API simplificadas
-export const fetchContents = async (): Promise<Content[]> => {
-    const response = await api.get('/contents');
+export const fetchContents = async (params?: {
+    search?: string;
+    author?: string;
+    tags?: string[];
+    publishedAfter?: string;
+    publishedBefore?: string;
+    limit?: number;
+    offset?: number;
+}): Promise<{ contents: Content[], total: number }> => {
+    const response = await api.get('/contents', { params });
     return response.data;
 };
 
 export const fetchContent = async (id: string): Promise<Content> => {
-    const response = await api.get(`/content/${id}`);
+    // Sugestão: Usar o endpoint no plural para consistência com REST
+    const response = await api.get(`/contents/${id}`);
     return response.data;
 };
 
@@ -74,8 +101,8 @@ export const fetchAnalyses = async (): Promise<Analysis[]> => {
     return response.data;
 };
 
-export const analyzeContent = async (contentId: string): Promise<Analysis> => {
-    const response = await api.post('/analyze', { contentId });
+export const analyzeContent = async (params: { contentId: string; analysisType?: string }): Promise<Analysis> => {
+    const response = await api.post('/analyze', params);
     return response.data;
 };
 

@@ -23,13 +23,7 @@ const AnalysisSchema = new Schema<IAnalysisDocument>({
   contentId: {
     type: String,
     required: true,
-    ref: 'Content',
-    validate: {
-      validator: function(v: string) {
-        return mongoose.Types.ObjectId.isValid(v) || /^[0-9a-fA-F]{24}$/.test(v);
-      },
-      message: 'ContentId must be a valid ObjectId or 24-character hex string'
-    }
+    ref: 'Content'
   },
   status: {
     type: String,
@@ -46,7 +40,7 @@ const AnalysisSchema = new Schema<IAnalysisDocument>({
     trim: true,
     maxlength: [1000, 'Error message cannot exceed 1000 characters'],
     validate: {
-      validator: function(v: string | undefined) {
+      validator: function (v: string | undefined) {
         return !v || v.length > 0;
       },
       message: 'Error cannot be empty if provided'

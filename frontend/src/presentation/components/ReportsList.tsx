@@ -1,10 +1,10 @@
 import React from 'react';
 import { Grid, Paper, Typography, List, ListItem, ListItemText, ListItemSecondaryAction, Button } from '@mui/material';
 import { GetApp } from '@mui/icons-material';
-import { Report } from '../../api';
+import { ReportItem } from '../../domain/types/dashboard';
 
 interface ReportsListProps {
-    reports: Report[];
+    reports: ReportItem[];
     onExportPdf: (reportId: string) => void;
 }
 
@@ -24,16 +24,8 @@ const ReportsList: React.FC<ReportsListProps> = ({ reports, onExportPdf }) => {
                                     secondary={
                                         <React.Fragment>
                                             <Typography variant="caption" display="block">
-                                                Tipo: {report.type.replace('_', ' ').toUpperCase()}
-                                            </Typography>
-                                            <Typography variant="caption" display="block">
                                                 Criado em: {new Date(report.createdAt).toLocaleDateString('pt-BR')}
                                             </Typography>
-                                            {report.generatedBy && (
-                                                <Typography variant="caption" display="block">
-                                                    Por: {report.generatedBy}
-                                                </Typography>
-                                            )}
                                         </React.Fragment>
                                     }
                                 />

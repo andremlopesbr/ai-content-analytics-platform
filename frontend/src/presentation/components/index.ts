@@ -9,6 +9,8 @@ export { default as StatusIndicators, AnalysisStatus } from './StatusIndicators'
 // Novos componentes reutilizáveis
 export { default as ApiButton } from './ApiButton';
 export { default as ApiForm } from './ApiForm';
+export { default as ContentFilters } from './ContentFilters';
+export { default as ContentTable } from './ContentTable';
 export { default as DataTable, DataTableWithQuery } from './DataTable';
 export { default as ApiStatus, ApiStatusFromQuery } from './ApiStatus';
 export { default as ConfirmDialog, useConfirmDialog } from './ConfirmDialog';

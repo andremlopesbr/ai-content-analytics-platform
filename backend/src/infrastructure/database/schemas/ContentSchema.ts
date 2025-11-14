@@ -30,10 +30,9 @@ const ContentSchema = new Schema<IContentDocument>({
   url: {
     type: String,
     required: true,
-    unique: true,
     trim: true,
     validate: {
-      validator: function(v: string) {
+      validator: function (v: string) {
         // Basic URL validation
         return /^https?:\/\/.+/.test(v);
       },
@@ -48,7 +47,7 @@ const ContentSchema = new Schema<IContentDocument>({
   publishedAt: {
     type: Date,
     validate: {
-      validator: function(v: Date) {
+      validator: function (v: Date) {
         return v <= new Date();
       },
       message: 'Published date cannot be in the future'
@@ -59,7 +58,7 @@ const ContentSchema = new Schema<IContentDocument>({
     trim: true,
     maxlength: [50, 'Tag cannot exceed 50 characters'],
     validate: {
-      validator: function(v: string) {
+      validator: function (v: string) {
         return v.length > 0;
       },
       message: 'Tag cannot be empty'
@@ -74,15 +73,13 @@ const ContentSchema = new Schema<IContentDocument>({
   _id: false // Use custom _id
 });
 
-// Indexes for performance
-ContentSchema.index({ url: 1 }, { unique: true });
+// Single-field indexes for performance
 ContentSchema.index({ author: 1 });
-ContentSchema.index({ tags: 1 });
 ContentSchema.index({ publishedAt: -1 });
-ContentSchema.index({ createdAt: -1 });
-ContentSchema.index({ updatedAt: -1 });
+ContentSchema.index({ tags: 1 });
 
-// Compound indexes for common queries
+// Compound and unique indexes for common queries
+ContentSchema.index({ url: 1 }, { unique: true });
 ContentSchema.index({ author: 1, publishedAt: -1 });
 ContentSchema.index({ tags: 1, publishedAt: -1 });
 

@@ -14,7 +14,7 @@ export const useAnalyzeContent = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (contentId: string) => analyzeContent(contentId),
+        mutationFn: (params: { contentId: string; analysisType?: string }) => analyzeContent(params),
         onSuccess: () => {
             // Invalidate queries para atualizar listas
             queryClient.invalidateQueries({ queryKey: ['analyses'] });
