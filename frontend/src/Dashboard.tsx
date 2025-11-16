@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Typography, Box } from '@mui/material';
+import { Grid, Typography, Box, CircularProgress } from '@mui/material';
 import { useStats, useReports } from './application/hooks';
 import { exportReportPdf } from './api';
 import {
@@ -31,15 +31,42 @@ function Dashboard() {
   const { data: reports } = useReports();
 
   if (isLoading) {
-    return <Typography>Carregando...</Typography>;
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress size={60} sx={{ mb: 2 }} />
+        <Typography variant="h6">Carregando dashboard...</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Buscando estatísticas do sistema
+        </Typography>
+      </Box>
+    );
   }
 
   if (error) {
-    return <Typography color="error">Erro ao carregar estatísticas</Typography>;
+    console.error('Dashboard error:', error);
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography color="error" variant="h6">
+          Erro ao carregar estatísticas
+        </Typography>
+        <Typography color="text.secondary">
+          Verifique se o backend está funcionando. Tente recarregar a página.
+        </Typography>
+      </Box>
+    );
   }
 
   if (!stats) {
-    return <Typography>Nenhum dado disponível</Typography>;
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h6">
+          Nenhum dado disponível
+        </Typography>
+        <Typography color="text.secondary">
+          Comece raspando algum conteúdo para ver as estatísticas.
+        </Typography>
+      </Box>
+    );
   }
 
   return (

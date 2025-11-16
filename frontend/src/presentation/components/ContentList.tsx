@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Paper, Typography } from '@mui/material';
+import { Paper, Typography } from '@mui/material';
 import { useContents } from '../../application/hooks';
 import { useContentFilters } from '../../application/hooks/useContentFilters';
 import ContentFilters from './ContentFilters';

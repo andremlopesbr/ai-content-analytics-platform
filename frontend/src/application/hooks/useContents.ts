@@ -11,9 +11,11 @@ export const useContents = (filters?: {
     limit?: number;
     offset?: number;
 }) => {
+    // Define limite padrão de 10 se não especificado
+    const defaultFilters = { limit: 10, ...filters };
     return useQuery({
-        queryKey: ['contents', filters],
-        queryFn: () => fetchContents(filters),
+        queryKey: ['contents', defaultFilters],
+        queryFn: () => fetchContents(defaultFilters),
     });
 };
 

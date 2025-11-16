@@ -122,45 +122,45 @@ docker-compose up -d
 
 # Access
 # Frontend: http://localhost:3000
-# Backend: http://localhost:4000
-# MongoDB: localhost:27017
+# Backend: http://localhost:3001
+# MongoDB: mongodb://localhost:27017
 ```
 
 ## 📦 Services
 
-| Service | Port | Description |
-|---------|------|--------------|
-| Frontend | 3000 | React dashboard |
-| Backend | 4000 | Fastify API |
-| MongoDB | 27017 | Database |
-| Redis | 6379 | Cache |
+| Service  | Port  | Description     |
+| -------- | ----- | --------------- |
+| Frontend | 3000  | React dashboard |
+| Backend  | 3001  | Fastify API     |
+| MongoDB  | 27017 | Database        |
+| Redis    | 6379  | Cache           |
 
 ## 📚 API Endpoints
 
 ### Content Management
-| Method | Endpoint | Description | Request Body | Response |
-|--------|----------|-------------|--------------|----------|
-| `POST` | `/api/scrape` | Scrape content from URL | `url` (required), `title`, `author`, `publishedAt`, `tags[]`, `metadata` | Content object + `scraped: boolean` |
-| `GET` | `/api/content/:id` | Get content by ID | - | Content details |
+| Method | Endpoint           | Description             | Request Body                                                             | Response                            |
+| ------ | ------------------ | ----------------------- | ------------------------------------------------------------------------ | ----------------------------------- |
+| `POST` | `/api/scrape`      | Scrape content from URL | `url` (required), `title`, `author`, `publishedAt`, `tags[]`, `metadata` | Content object + `scraped: boolean` |
+| `GET`  | `/api/content/:id` | Get content by ID       | -                                                                        | Content details                     |
 
 ### AI Analysis
-| Method | Endpoint | Description | Request Body | Response |
-|--------|----------|-------------|--------------|----------|
+| Method | Endpoint       | Description             | Request Body                                                                                              | Response                            |
+| ------ | -------------- | ----------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | `POST` | `/api/analyze` | Analyze content with AI | `contentId` (required), `analysisType` (optional: sentiment/topics/keywords/summary/entities), `metadata` | Analysis object + `queued: boolean` |
 
 ### Reports & Analytics
-| Method | Endpoint | Description | Query Params | Response |
-|--------|----------|-------------|--------------|----------|
-| `GET` | `/api/reports` | List reports with filters | `type`, `generatedBy`, `limit` (1-100), `offset` | Reports array + total count |
-| `POST` | `/api/reports/generate` | Generate new report | `title` (required), `type` (required: content_summary/trend_analysis/performance_metrics/custom), `contentIds[]`, `analysisIds[]`, `filters`, `generatedBy` | Report object |
-| `GET` | `/api/stats` | Get platform statistics | - | Comprehensive stats (contents, analyses, reports, status breakdowns) |
+| Method | Endpoint                | Description               | Query Params                                                                                                                                                | Response                                                             |
+| ------ | ----------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `GET`  | `/api/reports`          | List reports with filters | `type`, `generatedBy`, `limit` (1-100), `offset`                                                                                                            | Reports array + total count                                          |
+| `POST` | `/api/reports/generate` | Generate new report       | `title` (required), `type` (required: content_summary/trend_analysis/performance_metrics/custom), `contentIds[]`, `analysisIds[]`, `filters`, `generatedBy` | Report object                                                        |
+| `GET`  | `/api/stats`            | Get platform statistics   | -                                                                                                                                                           | Comprehensive stats (contents, analyses, reports, status breakdowns) |
 
 ### Scraping-Specific Endpoints
-| Method | Endpoint | Description | Notes |
-|--------|----------|-------------|-------|
-| Batch scraping support | `/api/scrape` with multiple URLs | Process multiple URLs in sequence | Returns array of results |
-| Content deduplication | Automatic URL-based | Prevents duplicate scraping | Returns existing content if found |
-| Rate limiting | Built-in via Bull Queue | Prevents overwhelming target sites | Configurable concurrency |
+| Method                 | Endpoint                         | Description                        | Notes                             |
+| ---------------------- | -------------------------------- | ---------------------------------- | --------------------------------- |
+| Batch scraping support | `/api/scrape` with multiple URLs | Process multiple URLs in sequence  | Returns array of results          |
+| Content deduplication  | Automatic URL-based              | Prevents duplicate scraping        | Returns existing content if found |
+| Rate limiting          | Built-in via Bull Queue          | Prevents overwhelming target sites | Configurable concurrency          |
 
 ## 🧪 AI Features
 

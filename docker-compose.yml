@@ -7,11 +7,11 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=production
-      - PORT=3001
       - MONGODB_URI=mongodb://mongodb:27017/ai-content-analytics
       - REDIS_URL=redis://redis:6379
       - QUEUE_REDIS_URL=redis://redis:6379
-      - CORS_ORIGIN=http://localhost:3000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CORS_ORIGIN=http://localhost:3000 # Garante que o backend aceite requisições do frontend
     depends_on:
       mongodb:
         condition: service_healthy
@@ -32,7 +32,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
+    ports: # Mapeia a porta 3000 do host para a porta 80 do contêiner (Nginx)
       - "3000:80"
     depends_on:
       backend:

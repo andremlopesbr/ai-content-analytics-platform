@@ -25,7 +25,7 @@
     "@fastify/cors": "^8.5.0",
     "@fastify/jwt": "^7.2.4",
     "@fastify/rate-limit": "^8.0.3",
-    "@google/generative-ai": "^0.24.1",
+    "@google/genai": "^1.29.1",
     "@types/ioredis": "^4.28.10",
     "axios": "^1.6.2",
     "bull": "^4.12.2",

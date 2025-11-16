@@ -1,4 +1,7 @@
-FROM node:18-alpine as build
+FROM node:18-slim
+
+# Instalar procps para ps
+RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -11,18 +14,10 @@ RUN npm ci --legacy-peer-deps
 # Copiar código fonte
 COPY . .
 
-# Build da aplicação
-RUN npm run build
+EXPOSE 3000
 
-# Produção
-FROM nginx:alpine
+# Adicionar logs para debug
+RUN echo "Container started at $(date)" > /tmp/container_start.log
 
-# Copiar arquivos buildados para nginx
-COPY --from=build /app/build /usr/share/nginx/html
-
-# Copiar configuração nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+# Trap SIGTERM para debug
+CMD ["sh", "-c", "trap 'echo SIGTERM received at $(date) >> /tmp/sigterm.log; ps aux >> /tmp/processes_at_sigterm.log; exit 0' TERM; echo 'Process started at $(date)' >> /tmp/process_start.log; npm start"]

@@ -136,6 +136,16 @@ const ContentTable: React.FC<ContentTableProps> = ({
                                     </TableCell>
                                     <TableCell>
                                         <StatusIndicator status={getAnalysisStatus(content.id)} size="small" />
+                                        {getAnalysisStatus(content.id) === 'pending' && (
+                                            <Typography variant="caption" color="text.secondary" display="block">
+                                                Não analisado
+                                            </Typography>
+                                        )}
+                                        {getAnalysisStatus(content.id) === 'failed' && (
+                                            <Typography variant="caption" color="error" display="block">
+                                                Clique em "Analisar" para tentar novamente
+                                            </Typography>
+                                        )}
                                     </TableCell>
                                     <TableCell>
                                         <Typography variant="body2">

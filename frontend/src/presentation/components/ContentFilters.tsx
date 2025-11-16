@@ -4,10 +4,7 @@ import {
     TextField,
     Button,
     Grid,
-    FormControl,
-    InputLabel,
     Chip,
-    IconButton,
     Collapse,
 } from '@mui/material';
 import {
@@ -16,7 +13,7 @@ import {
     ExpandMore as ExpandMoreIcon,
     ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
-import { ContentFilters, useContentFilters } from '../../application/hooks/useContentFilters';
+import { useContentFilters } from '../../application/hooks/useContentFilters';
 
 interface ContentFiltersProps {
     showFilters: boolean;

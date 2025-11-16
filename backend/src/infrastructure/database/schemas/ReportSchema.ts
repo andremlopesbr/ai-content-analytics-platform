@@ -38,27 +38,27 @@ const ReportSchema = new Schema<IReportDocument>({
     type: String,
     ref: 'Content',
     validate: {
-      validator: function(v: string) {
-        return mongoose.Types.ObjectId.isValid(v) || /^[0-9a-fA-F]{24}$/.test(v);
+      validator: function (v: string) {
+        return mongoose.Types.ObjectId.isValid(v) || /^[0-9a-fA-F]{24}$/.test(v) || /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(v);
       },
-      message: 'Each contentId must be a valid ObjectId or 24-character hex string'
+      message: 'Each contentId must be a valid ObjectId, 24-character hex string, or UUID'
     }
   }],
   analysisIds: [{
     type: String,
     ref: 'Analysis',
     validate: {
-      validator: function(v: string) {
-        return mongoose.Types.ObjectId.isValid(v) || /^[0-9a-fA-F]{24}$/.test(v);
+      validator: function (v: string) {
+        return mongoose.Types.ObjectId.isValid(v) || /^[0-9a-fA-F]{24}$/.test(v) || /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(v);
       },
-      message: 'Each analysisId must be a valid ObjectId or 24-character hex string'
+      message: 'Each analysisId must be a valid ObjectId, 24-character hex string, or UUID'
     }
   }],
   data: {
     type: Schema.Types.Mixed,
     required: true,
     validate: {
-      validator: function(v: any) {
+      validator: function (v: any) {
         return v && typeof v === 'object';
       },
       message: 'Data must be a non-empty object'
@@ -89,9 +89,9 @@ ReportSchema.index({ type: 1, createdAt: -1 });
 ReportSchema.index({ generatedBy: 1, createdAt: -1 });
 
 // Ensure at least one content or analysis reference
-ReportSchema.pre('validate', function(next) {
+ReportSchema.pre('validate', function (next) {
   if ((!this.contentIds || this.contentIds.length === 0) &&
-      (!this.analysisIds || this.analysisIds.length === 0)) {
+    (!this.analysisIds || this.analysisIds.length === 0)) {
     this.invalidate('contentIds', 'Report must have at least one content or analysis reference');
     this.invalidate('analysisIds', 'Report must have at least one content or analysis reference');
   }

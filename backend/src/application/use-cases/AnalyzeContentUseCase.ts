@@ -2,6 +2,7 @@ import { injectable, inject } from 'tsyringe';
 import { Analysis, AnalysisStatus } from '../../domain/entities/Analysis';
 import { IAnalysisRepository } from '../../domain/repositories/IAnalysisRepository';
 import { IContentRepository } from '../../domain/repositories/IContentRepository';
+import { GeminiAIService, AIAnalysisRequest } from '../../infrastructure/ai/GeminiAIService';
 import { AppError } from '../../shared/errors/AppError';
 
 export interface AnalyzeContentRequest {
@@ -20,6 +21,7 @@ export class AnalyzeContentUseCase {
   constructor(
     @inject('IAnalysisRepository') private analysisRepository: IAnalysisRepository,
     @inject('IContentRepository') private contentRepository: IContentRepository,
+    @inject(GeminiAIService) private geminiAIService: GeminiAIService,
   ) { }
 
   async execute(request: AnalyzeContentRequest): Promise<AnalyzeContentResponse> {
@@ -77,7 +79,7 @@ export class AnalyzeContentUseCase {
       // Mark as processing
       await this.analysisRepository.update(analysisId, { status: AnalysisStatus.PROCESSING });
 
-      // TODO: Implement actual AI analysis using Google Generative AI
+      // Perform actual AI analysis using Google Gemini AI
       const results = await this.performAIAnalysis(analysis.contentId);
 
       // Mark as completed
@@ -86,30 +88,53 @@ export class AnalyzeContentUseCase {
         results,
       });
     } catch (error) {
-      // Mark as failed
+      // Log detailed error for debugging
+      console.error(`Analysis ${analysisId} failed:`, error);
+
+      // Mark as failed with truncated error message (max 500 chars)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const truncatedError = errorMessage.length > 500 ?
+        errorMessage.substring(0, 500) + '...' : errorMessage;
+
       await this.analysisRepository.update(analysisId, {
         status: AnalysisStatus.FAILED,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: truncatedError,
       });
     }
   }
 
   private async performAIAnalysis(contentId: string): Promise<Record<string, any>> {
-    // Placeholder AI analysis implementation
-    // In a real implementation, this would use Google Generative AI
-
     const content = await this.contentRepository.findById(contentId);
     if (!content) {
       throw new Error('Content not found for analysis');
     }
 
+    // Prepare request for Gemini AI
+    const aiRequest: AIAnalysisRequest = {
+      content: content.content,
+      title: content.title,
+      analysisType: 'comprehensive', // Can be made configurable later
+      metadata: {
+        author: content.author,
+        publishedAt: content.publishedAt,
+        tags: content.tags,
+      },
+    };
+
+    // Call Gemini AI service
+    const aiResponse = await this.geminiAIService.analyzeContent(aiRequest);
+
+    // Return standardized response format
     return {
-      sentiment: 'positive',
-      keywords: ['tecnologia', 'inovação', 'desenvolvimento'],
-      summary: `Resumo do conteúdo: ${content.title}`,
-      readabilityScore: 75,
-      wordCount: content.content.split(' ').length,
-      language: 'pt-BR',
+      sentiment: aiResponse.sentiment,
+      topics: aiResponse.topics,
+      keywords: aiResponse.keywords,
+      summary: aiResponse.summary,
+      entities: aiResponse.entities,
+      readabilityScore: aiResponse.readabilityScore,
+      wordCount: aiResponse.wordCount,
+      language: aiResponse.language,
+      confidence: aiResponse.confidence,
       analyzedAt: new Date(),
     };
   }

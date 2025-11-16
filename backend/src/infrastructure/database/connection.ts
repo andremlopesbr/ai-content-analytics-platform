@@ -47,7 +47,7 @@ class DatabaseConnection {
         maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
         serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
         socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-        bufferCommands: false, // Disable mongoose buffering
+        bufferCommands: true, // Enable mongoose buffering to handle async operations
 
         // Retry settings
         retryWrites: true,
@@ -60,7 +60,7 @@ class DatabaseConnection {
 
       // Connection event listeners
       mongoose.connection.on('error', (error) => {
-        console.error('❌ MongoDB connection error:', error);
+        console.error('❌ MongoDB connection error:', error.message || error);
         this.isConnected = false;
       });
 
@@ -71,6 +71,11 @@ class DatabaseConnection {
 
       mongoose.connection.on('reconnected', () => {
         console.log('🔄 MongoDB reconnected');
+        this.isConnected = true;
+      });
+
+      mongoose.connection.on('connected', () => {
+        console.log('✅ MongoDB connected successfully');
         this.isConnected = true;
       });
 

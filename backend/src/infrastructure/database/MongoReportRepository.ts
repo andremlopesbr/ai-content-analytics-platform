@@ -96,7 +96,7 @@ export class MongoReportRepository implements IReportRepository {
       const doc = await ReportModel.findByIdAndUpdate(
         id,
         updateData,
-        { new: true, runValidators: true }
+        { new: true, runValidators: false }
       );
 
       return doc ? this.documentToEntity(doc) : null;

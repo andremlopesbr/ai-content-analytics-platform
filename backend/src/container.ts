@@ -10,6 +10,7 @@ import { MongoContentRepository } from './infrastructure/database/MongoContentRe
 import { MongoAnalysisRepository } from './infrastructure/database/MongoAnalysisRepository';
 import { MongoReportRepository } from './infrastructure/database/MongoReportRepository';
 import { WebScraperService } from './infrastructure/scrapers/WebScraperService';
+import { GeminiAIService } from './infrastructure/ai/GeminiAIService';
 
 // Register repositories
 container.registerSingleton<IContentRepository>('IContentRepository', MongoContentRepository);
@@ -18,6 +19,7 @@ container.registerSingleton<IReportRepository>('IReportRepository', MongoReportR
 
 // Register services
 container.registerSingleton<IScraperService>('IScraperService', WebScraperService);
+container.registerSingleton(GeminiAIService, GeminiAIService);
 
 // Register use cases
 import { ScrapeContentUseCase } from './application/use-cases/ScrapeContentUseCase';
