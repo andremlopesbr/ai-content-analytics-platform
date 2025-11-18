@@ -48,16 +48,15 @@ export class GeminiAIService {
 
             // Use the new library API
             const response = await this.genAI.models.generateContent({
-                model: 'gemini-2.0-flash-exp',
-                contents: prompt,
+                model: 'gemini-1.5-flash',
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
             });
 
             console.log('Content generated, getting response...');
 
-            let text = '';
-            for await (const chunk of response) {
-                text += chunk.text || '';
-            }
+            // Get the text from the response
+            const text = response.text || '';
+            console.log('Response text length:', text.length);
 
             console.log('Response received, parsing...');
 
@@ -67,6 +66,7 @@ export class GeminiAIService {
         } catch (error: any) {
             console.error('Gemini AI analysis error:', error);
             console.error('Error details:', error.response?.data || error.message);
+            console.error('Error stack:', error.stack);
             throw new AppError(`AI analysis failed: ${error.message}`, 500);
         }
     }
@@ -114,16 +114,32 @@ Please provide accurate and detailed analysis. Focus on:
 
     private parseAnalysisResponse(responseText: string, originalContent: string): AIAnalysisResponse {
         try {
-            // Try to extract JSON from the response
-            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) {
-                throw new Error('No JSON found in AI response');
+            console.log('Parsing response text:', responseText.substring(0, 200) + '...');
+
+            // Try to extract JSON from the response - look for markdown code blocks first
+            let jsonText = '';
+
+            // Check for markdown code block with json
+            const markdownMatch = responseText.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+            if (markdownMatch) {
+                jsonText = markdownMatch[1];
+                console.log('Found JSON in markdown code block');
+            } else {
+                // Fallback to original method
+                const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    jsonText = jsonMatch[0];
+                    console.log('Found JSON directly in response');
+                } else {
+                    throw new Error('No JSON found in AI response');
+                }
             }
 
-            const parsed = JSON.parse(jsonMatch[0]);
+            console.log('Extracted JSON text:', jsonText.substring(0, 100) + '...');
+            const parsed = JSON.parse(jsonText);
 
             // Validate and provide defaults for missing fields
-            return {
+            const result = {
                 sentiment: this.validateSentiment(parsed.sentiment) || 'neutral',
                 topics: Array.isArray(parsed.topics) ? parsed.topics : [],
                 keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
@@ -138,8 +154,12 @@ Please provide accurate and detailed analysis. Focus on:
                 language: parsed.language || 'pt-BR',
                 confidence: this.validateScore(parsed.confidence) || 85,
             };
+
+            console.log('Parsed result:', result);
+            return result;
         } catch (error) {
             console.error('Error parsing AI response:', error);
+            console.error('Original response text:', responseText);
             // Fallback response
             return this.createFallbackResponse(originalContent);
         }
